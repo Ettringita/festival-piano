@@ -16,7 +16,7 @@ const Sheets = (() => {
   function toObjects(rows) {
     if (!rows || rows.length < 2) return [];
     const headers = rows[0].map((h) => h.trim().toLowerCase()
-      .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // quita tildes
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
       .replace(/ /g, "_"));
     return rows.slice(1).map((row) => {
       const obj = {};
@@ -41,7 +41,7 @@ const Sheets = (() => {
     return toObjects(rows);
   }
 
-  // ── Horario alumno: lee Solicitudes con estado=aceptada ──
+  // ── Horario alumno ───────────────────────────────────────
   async function getHorarioAlumno(email) {
     const rows = await read(CONFIG.TABS.solicitudes);
     const todas = toObjects(rows);
@@ -51,52 +51,59 @@ const Sheets = (() => {
     );
   }
 
-  // ── Profesores con sus slots disponibles ─────────────────
+  // ── Profesores ───────────────────────────────────────────
   async function getProfesoresData() {
     const rows = await read(CONFIG.TABS.profesores);
-    return toObjects(rows); // [{nombre, fecha, hora}, ...]
+    return toObjects(rows);
   }
 
-  // Nombres únicos de profesores
   async function getProfesores() {
     const data = await getProfesoresData();
     const nombres = [...new Set(data.map((p) => p.nombre).filter(Boolean))];
     return nombres;
   }
 
+  // Fechas disponibles de un profesor (solo las que tienen slots)
+  async function getFechasDisponibles(profesor) {
+    const data = await getProfesoresData();
+    const fechas = [...new Set(
+      data.filter((p) => p.nombre === profesor && p.fecha)
+          .map((p) => p.fecha)
+    )].sort();
+    return fechas;
+  }
+
   // Slots disponibles de un profesor en una fecha
-  // Descuenta los ya solicitados (pendiente o aceptada)
   async function getSlotsDisponibles(profesor, fecha) {
     const [profData, solRows] = await Promise.all([
       getProfesoresData(),
       read(CONFIG.TABS.solicitudes),
     ]);
 
-    // Horas que ofrece el profesor ese día
     const ofertadas = profData
       .filter((p) => p.nombre === profesor && p.fecha === fecha)
       .map((p) => p.hora);
 
-    // Horas ya ocupadas (pendiente o aceptada) para ese profesor y fecha
     const solicitudes = toObjects(solRows);
     const ocupadas = new Set();
     solicitudes.forEach((s) => {
       if (s.profesor === profesor && s.fecha === fecha &&
           (s.estado === "pendiente" || s.estado === "aceptada")) {
-        [s.hora_1, s.hora_2, s.hora_3].forEach((h) => { if (h && h !== "me adapto") ocupadas.add(h); });
+        [s.hora_1, s.hora_2, s.hora_3].forEach((h) => {
+          if (h && h !== "Me adapto") ocupadas.add(h);
+        });
       }
     });
 
     return ofertadas.filter((h) => !ocupadas.has(h));
   }
 
-  // Validaciones del lado cliente
-  async function validarSolicitud(email, profesor, fecha, horas) {
+  // Validaciones
+  async function validarSolicitud(email, profesor, fecha) {
     const rows = await read(CONFIG.TABS.solicitudes);
     const solicitudes = toObjects(rows);
     const emailLow = email.toLowerCase();
 
-    // 1. ¿Ya tiene clase aceptada ese día?
     const claseAceptadaEseDia = solicitudes.some(
       (s) => s.email.toLowerCase() === emailLow &&
               s.fecha === fecha &&
@@ -106,7 +113,6 @@ const Sheets = (() => {
       return { ok: false, msg: "Ya tienes una clase aceptada ese día." };
     }
 
-    // 2. ¿Ya tiene solicitud pendiente ese día con ese profesor?
     const yaHaySolicitud = solicitudes.some(
       (s) => s.email.toLowerCase() === emailLow &&
               s.fecha === fecha &&
@@ -140,6 +146,7 @@ const Sheets = (() => {
     getConciertos,
     getHorarioAlumno,
     getProfesores,
+    getFechasDisponibles,
     getSlotsDisponibles,
     validarSolicitud,
     getSalas,

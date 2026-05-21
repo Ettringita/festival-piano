@@ -29,7 +29,6 @@ function setError(containerId, msg) {
 
 function formatDate(str) {
   if (!str) return "—";
-  // soporta dd/mm/yyyy y yyyy-mm-dd
   let d;
   if (str.includes("/")) {
     const [dd, mm, yyyy] = str.split("/");
@@ -135,14 +134,12 @@ document.getElementById("horario-form").addEventListener("submit", async (e) => 
 });
 
 // ── TAB 3: Solicitar Clase ───────────────────────────────────
-let profesoresCache = [];
-
 async function initSolicitud() {
   const sel = document.getElementById("sel-profesor");
   if (sel.options.length > 1) return;
   try {
-    profesoresCache = await Sheets.getProfesores();
-    profesoresCache.forEach((p) => {
+    const profesores = await Sheets.getProfesores();
+    profesores.forEach((p) => {
       if (!p) return;
       const opt = document.createElement("option");
       opt.value = opt.textContent = p;
@@ -153,34 +150,85 @@ async function initSolicitud() {
   }
 }
 
-// Cuando cambia profesor o fecha, carga los slots disponibles
-async function actualizarSlots() {
+// Al elegir profesor: carga sus fechas disponibles como botones
+document.getElementById("sel-profesor").addEventListener("change", async () => {
   const profesor = document.getElementById("sel-profesor").value;
-  const fecha = document.getElementById("sol-fecha").value;
-  if (!profesor || !fecha) return;
-
+  const fechasWrap = document.getElementById("fechas-wrap");
   const slotsWrap = document.getElementById("slots-wrap");
-  slotsWrap.innerHTML = `<div class="loading-state" style="padding:1rem 0"><span class="loader"></span></div>`;
+
+  slotsWrap.innerHTML = "";
+
+  if (!profesor) {
+    fechasWrap.innerHTML = "";
+    return;
+  }
+
+  fechasWrap.innerHTML = `<div class="loading-state" style="padding:0.75rem 0"><span class="loader"></span></div>`;
+
+  try {
+    const fechas = await Sheets.getFechasDisponibles(profesor);
+    if (!fechas.length) {
+      fechasWrap.innerHTML = `<p class="form-note">Este profesor no tiene fechas disponibles.</p>`;
+      return;
+    }
+
+    fechasWrap.innerHTML = `
+      <p class="slots-label">Fechas disponibles — elige una:</p>
+      <div class="slots-grid">
+        ${fechas.map((f) => `
+          <button type="button" class="fecha-btn" data-fecha="${f}">
+            ${formatDate(f)}
+          </button>`).join("")}
+      </div>`;
+
+    // Al elegir fecha, cargar slots
+    fechasWrap.querySelectorAll(".fecha-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        fechasWrap.querySelectorAll(".fecha-btn").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        cargarSlots(profesor, btn.dataset.fecha);
+      });
+    });
+
+  } catch (e) {
+    fechasWrap.innerHTML = `<p class="form-note" style="color:var(--error)">Error al cargar fechas.</p>`;
+  }
+});
+
+async function cargarSlots(profesor, fecha) {
+  const slotsWrap = document.getElementById("slots-wrap");
+  slotsWrap.innerHTML = `<div class="loading-state" style="padding:0.75rem 0"><span class="loader"></span></div>`;
 
   try {
     const slots = await Sheets.getSlotsDisponibles(profesor, fecha);
-    renderSlots(slots);
+    renderSlots(slots, fecha);
   } catch (e) {
     slotsWrap.innerHTML = `<p class="form-note" style="color:var(--error)">Error al cargar disponibilidad.</p>`;
   }
 }
 
-function renderSlots(slots) {
+function renderSlots(slots, fecha) {
   const slotsWrap = document.getElementById("slots-wrap");
-  if (!slots.length) {
-    slotsWrap.innerHTML = `<p class="form-note">No hay horas disponibles para esa fecha.</p>`;
-    return;
-  }
+
+  // Guardar fecha seleccionada en campo oculto
+  document.getElementById("sol-fecha-hidden").value = fecha;
 
   const todasOpciones = [...slots, "me_adapto"];
 
+  if (!slots.length) {
+    slotsWrap.innerHTML = `
+      <p class="slots-label">Preferencias de horario:</p>
+      <div class="slots-grid">
+        <label class="slot-option">
+          <input type="checkbox" name="slot" value="me_adapto" />
+          <span>Me adapto al profesor</span>
+        </label>
+      </div>`;
+    return;
+  }
+
   slotsWrap.innerHTML = `
-    <p class="slots-label">Selecciona hasta 3 preferencias de horario (por orden de prioridad):</p>
+    <p class="slots-label">Selecciona hasta 3 preferencias (por orden de prioridad):</p>
     <div class="slots-grid">
       ${todasOpciones.map((s) => `
         <label class="slot-option">
@@ -188,10 +236,8 @@ function renderSlots(slots) {
           <span>${s === "me_adapto" ? "Me adapto al profesor" : s}</span>
         </label>`).join("")}
     </div>
-    <p id="slots-error" class="form-note" style="color:var(--error);display:none">Máximo 3 preferencias.</p>
-  `;
+    <p id="slots-error" class="form-note" style="color:var(--error);display:none">Máximo 3 preferencias.</p>`;
 
-  // Máximo 3 checkboxes
   slotsWrap.querySelectorAll('input[name="slot"]').forEach((cb) => {
     cb.addEventListener("change", () => {
       const checked = [...slotsWrap.querySelectorAll('input[name="slot"]:checked')];
@@ -206,9 +252,6 @@ function renderSlots(slots) {
   });
 }
 
-document.getElementById("sel-profesor").addEventListener("change", actualizarSlots);
-document.getElementById("sol-fecha").addEventListener("change", actualizarSlots);
-
 document.getElementById("form-solicitud").addEventListener("submit", async (e) => {
   e.preventDefault();
   const btn = e.target.querySelector("button[type=submit]");
@@ -216,15 +259,14 @@ document.getElementById("form-solicitud").addEventListener("submit", async (e) =
   const nombre   = document.getElementById("sol-nombre").value.trim();
   const email    = document.getElementById("sol-email").value.trim();
   const profesor = document.getElementById("sel-profesor").value;
-  const fecha    = document.getElementById("sol-fecha").value;
+  const fecha    = document.getElementById("sol-fecha-hidden").value;
   const mensaje  = document.getElementById("sol-mensaje").value.trim();
 
-  // Recoger preferencias seleccionadas
+  if (!profesor) { showToast("Selecciona un profesor.", "error"); return; }
+  if (!fecha)    { showToast("Selecciona una fecha.", "error"); return; }
+
   const checked = [...document.querySelectorAll('input[name="slot"]:checked')];
-  if (!checked.length) {
-    showToast("Selecciona al menos una preferencia de horario.", "error");
-    return;
-  }
+  if (!checked.length) { showToast("Selecciona al menos una preferencia de horario.", "error"); return; }
 
   const horas = checked.map((c) => c.value === "me_adapto" ? "Me adapto" : c.value);
   const [hora_1 = "", hora_2 = "", hora_3 = ""] = horas;
@@ -233,21 +275,25 @@ document.getElementById("form-solicitud").addEventListener("submit", async (e) =
   btn.textContent = "Enviando...";
 
   try {
-    // Validar en cliente
-    const validacion = await Sheets.validarSolicitud(email, profesor, fecha, horas);
+    const validacion = await Sheets.validarSolicitud(email, profesor, fecha);
     if (!validacion.ok) {
       showToast(validacion.msg, "error");
       return;
     }
 
     await Sheets.postSolicitudClase({
-      nombre, email, profesor, fecha, hora_1, hora_2, hora_3,
-      mensaje, estado: "pendiente", timestamp: new Date().toISOString(),
+      nombre, email, profesor, fecha,
+      hora_1, hora_2, hora_3,
+      mensaje, estado: "pendiente",
+      timestamp: new Date().toISOString(),
     });
 
     showToast("✓ Solicitud enviada correctamente");
     e.target.reset();
+    document.getElementById("fechas-wrap").innerHTML = "";
     document.getElementById("slots-wrap").innerHTML = "";
+    document.getElementById("sol-fecha-hidden").value = "";
+
   } catch (err) {
     console.error(err);
     showToast("Error al enviar. Inténtalo de nuevo.", "error");
