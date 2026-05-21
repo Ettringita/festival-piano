@@ -1,0 +1,478 @@
+/* ============================================================
+   FESTIVAL DE PIANO — Styles
+   Estética: Art Déco · Negro profundo · Oro
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Cinzel:wght@400;600&display=swap');
+
+/* ── Tokens ─────────────────────────────────────────────── */
+:root {
+  --black:      #080808;
+  --black-2:    #111111;
+  --black-3:    #1a1a1a;
+  --black-4:    #242424;
+  --gold:       #C9A84C;
+  --gold-light: #E3C97A;
+  --gold-pale:  #F5EAC8;
+  --cream:      #F5F0E8;
+  --white:      #FAFAFA;
+  --muted:      #888880;
+  --error:      #C94C4C;
+  --success:    #4CAF50;
+
+  --font-display: 'Cinzel', serif;
+  --font-heading: 'Playfair Display', Georgia, serif;
+  --font-body:    'Cormorant Garamond', Georgia, serif;
+
+  --radius:  4px;
+  --radius-l: 8px;
+  --transition: 220ms ease;
+  --shadow-gold: 0 0 0 1px rgba(201,168,76,0.3), 0 4px 24px rgba(201,168,76,0.08);
+}
+
+/* ── Reset & Base ────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 16px; scroll-behavior: smooth; }
+
+body {
+  background: var(--black);
+  color: var(--cream);
+  font-family: var(--font-body);
+  font-size: 1.125rem;
+  font-weight: 300;
+  line-height: 1.7;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Decorative background ──────────────────────────────── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(201,168,76,0.04) 0%, transparent 70%),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 79px,
+      rgba(201,168,76,0.025) 80px
+    );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Layout ──────────────────────────────────────────────── */
+.app-wrapper {
+  position: relative;
+  z-index: 1;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 1.25rem 4rem;
+}
+
+/* ── Header ──────────────────────────────────────────────── */
+.site-header {
+  text-align: center;
+  padding: 3.5rem 1rem 2.5rem;
+  position: relative;
+}
+
+.header-ornament {
+  font-size: 0.65rem;
+  letter-spacing: 0.35em;
+  color: var(--gold);
+  text-transform: uppercase;
+  font-family: var(--font-display);
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.site-header h1 {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 5vw, 2.8rem);
+  font-weight: 600;
+  color: var(--white);
+  line-height: 1.15;
+  letter-spacing: 0.04em;
+}
+
+.site-header h1 em {
+  display: block;
+  font-family: var(--font-heading);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 0.65em;
+  color: var(--gold);
+  letter-spacing: 0.1em;
+  margin-top: 0.2em;
+}
+
+.header-line {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.75rem;
+}
+.header-line::before,
+.header-line::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold) 60%, transparent);
+  opacity: 0.4;
+}
+.header-diamond {
+  width: 6px; height: 6px;
+  background: var(--gold);
+  transform: rotate(45deg);
+  flex-shrink: 0;
+}
+
+/* ── Tabs ────────────────────────────────────────────────── */
+.tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid rgba(201,168,76,0.2);
+  margin-bottom: 2.5rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar { display: none; }
+
+.tab-btn {
+  flex: 1;
+  min-width: 120px;
+  padding: 1rem 0.75rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color var(--transition), border-color var(--transition);
+  white-space: nowrap;
+}
+.tab-btn:hover { color: var(--gold-light); }
+.tab-btn.active {
+  color: var(--gold);
+  border-bottom-color: var(--gold);
+}
+
+/* ── Tab panels ──────────────────────────────────────────── */
+.tab-panel { display: none; animation: fadeUp 0.35s ease both; }
+.tab-panel.active { display: block; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Section headings ────────────────────────────────────── */
+.section-title {
+  font-family: var(--font-heading);
+  font-size: 1.6rem;
+  font-weight: 400;
+  color: var(--white);
+  margin-bottom: 0.3rem;
+}
+.section-subtitle {
+  color: var(--muted);
+  font-size: 1rem;
+  font-weight: 300;
+  margin-bottom: 2rem;
+}
+
+/* ── Concert cards ───────────────────────────────────────── */
+#conciertos-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.concert-card {
+  display: grid;
+  grid-template-columns: 70px 1fr auto;
+  gap: 0 1.25rem;
+  align-items: center;
+  background: var(--black-2);
+  border: 1px solid rgba(201,168,76,0.15);
+  border-left: 3px solid var(--gold);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.5rem;
+  animation: fadeUp 0.4s ease both;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+.concert-card:hover {
+  border-color: rgba(201,168,76,0.45);
+  box-shadow: var(--shadow-gold);
+}
+
+.concert-card__date {
+  text-align: center;
+  line-height: 1;
+}
+.concert-card__day {
+  display: block;
+  font-family: var(--font-heading);
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--gold);
+}
+.concert-card__month {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-top: 0.1rem;
+}
+
+.concert-card__title {
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  font-weight: 400;
+  color: var(--white);
+  margin-bottom: 0.35rem;
+}
+.concert-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+.concert-card__desc {
+  font-size: 0.9rem;
+  color: var(--muted);
+  font-style: italic;
+  margin-top: 0.35rem;
+}
+.concert-card__badge {
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: rgba(201,168,76,0.12);
+  color: var(--gold);
+  border: 1px solid rgba(201,168,76,0.3);
+  border-radius: 2px;
+  padding: 0.3rem 0.6rem;
+  white-space: nowrap;
+}
+
+/* ── My Schedule (Tab 2) ─────────────────────────────────── */
+.horario-search {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+.horario-search input {
+  flex: 1;
+}
+
+.horario-found {
+  color: var(--muted);
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+}
+.horario-found strong { color: var(--gold); }
+
+.schedule-table-wrap {
+  overflow-x: auto;
+  border-radius: var(--radius);
+}
+.schedule-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 1rem;
+}
+.schedule-table thead {
+  background: var(--black-3);
+}
+.schedule-table th {
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(201,168,76,0.2);
+}
+.schedule-table td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  color: var(--cream);
+  font-weight: 300;
+}
+.schedule-table tbody tr:hover { background: rgba(201,168,76,0.04); }
+
+/* ── Forms ───────────────────────────────────────────────── */
+.form-card {
+  background: var(--black-2);
+  border: 1px solid rgba(201,168,76,0.15);
+  border-radius: var(--radius-l);
+  padding: 2rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+.form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+.form-group.full { grid-column: 1 / -1; }
+
+label {
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+input, select, textarea {
+  background: var(--black-3);
+  border: 1px solid rgba(201,168,76,0.2);
+  border-radius: var(--radius);
+  color: var(--cream);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 300;
+  padding: 0.7rem 0.9rem;
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+  width: 100%;
+  -webkit-appearance: none;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(201,168,76,0.1);
+}
+input::placeholder, textarea::placeholder {
+  color: rgba(136,136,128,0.5);
+}
+select option { background: var(--black-3); color: var(--cream); }
+
+textarea { resize: vertical; min-height: 90px; }
+
+/* ── Buttons ─────────────────────────────────────────────── */
+.btn {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 0.85rem 2rem;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all var(--transition);
+  display: inline-block;
+}
+.btn--primary {
+  background: var(--gold);
+  color: var(--black);
+}
+.btn--primary:hover:not(:disabled) {
+  background: var(--gold-light);
+  box-shadow: 0 4px 20px rgba(201,168,76,0.25);
+}
+.btn--primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.btn--ghost {
+  background: transparent;
+  color: var(--gold);
+  border: 1px solid rgba(201,168,76,0.4);
+}
+.btn--ghost:hover { border-color: var(--gold); background: rgba(201,168,76,0.06); }
+
+.form-footer {
+  margin-top: 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.form-note {
+  font-size: 0.875rem;
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* ── Loading & Error states ──────────────────────────────── */
+.loading-state, .error-state, .empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 4rem 1rem;
+  color: var(--muted);
+  font-size: 1rem;
+  text-align: center;
+}
+
+.loader {
+  width: 28px; height: 28px;
+  border: 2px solid rgba(201,168,76,0.15);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: block;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.icon-error {
+  width: 36px; height: 36px;
+  background: rgba(201,76,76,0.12);
+  border: 1px solid rgba(201,76,76,0.3);
+  border-radius: 50%;
+  color: var(--error);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-family: var(--font-display);
+}
+.empty-state { color: var(--muted); font-style: italic; }
+
+/* ── Toast ───────────────────────────────────────────────── */
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 9999;
+  background: var(--black-3);
+  border: 1px solid rgba(201,168,76,0.3);
+  color: var(--cream);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  padding: 0.9rem 1.5rem;
+  border-radius: var(--radius);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  transform: translateY(1rem);
+  opacity: 0;
+  transition: all 0.35s ease;
+  max-width: 320px;
+}
+.toast--visible { transform: translateY(0); opacity: 1; }
+.toast--error { border-color: rgba(201,76,76,0.4); }
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .site-header { padding: 2.5rem 0.5rem 2rem; }
+  .concert-card { grid-template-columns: 55px 1fr; }
+  .concert-card__badge { display: none; }
+  .form-grid { grid-template-columns: 1fr; }
+  .form-group.full { grid-column: 1; }
+  .horario-search { flex-direction: column; }
+  .form-footer { flex-direction: column; align-items: flex-start; }
+  .toast { right: 1rem; left: 1rem; max-width: none; }
+}

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Festival Internacional de Piano</title>
+  <meta name="description" content="Portal de alumnos del Festival Internacional de Piano" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <div class="app-wrapper">
+
+    <!-- Header -->
+    <header class="site-header">
+      <span class="header-ornament">Portal del Alumno</span>
+      <h1 id="header-title">
+        Festival Internacional de Piano
+        <em id="header-edition">2025</em>
+      </h1>
+      <div class="header-line"><div class="header-diamond"></div></div>
+    </header>
+
+    <!-- Tab Navigation -->
+    <nav class="tabs" role="tablist">
+      <button class="tab-btn" role="tab" data-tab="conciertos" aria-selected="true">
+        🎼 Conciertos
+      </button>
+      <button class="tab-btn" role="tab" data-tab="horario">
+        📅 Mi Horario
+      </button>
+      <button class="tab-btn" role="tab" data-tab="solicitar">
+        🎹 Solicitar Clase
+      </button>
+      <button class="tab-btn" role="tab" data-tab="reservar">
+        🏛️ Reservar Sala
+      </button>
+    </nav>
+
+    <!-- ── TAB 1: Calendario de Conciertos ────────────── -->
+    <section id="conciertos" class="tab-panel" role="tabpanel">
+      <h2 class="section-title">Calendario de Conciertos</h2>
+      <p class="section-subtitle">Programa oficial del festival · Todos los eventos</p>
+      <div id="conciertos-list">
+        <!-- JS renders here -->
+      </div>
+    </section>
+
+    <!-- ── TAB 2: Mi Horario ──────────────────────────── -->
+    <section id="horario" class="tab-panel" role="tabpanel">
+      <h2 class="section-title">Mi Horario Personal</h2>
+      <p class="section-subtitle">Introduce tu correo de inscripción para ver tus clases asignadas</p>
+
+      <form id="horario-form" class="horario-search">
+        <input
+          id="email-input"
+          type="email"
+          placeholder="tu@correo.com"
+          required
+          autocomplete="email"
+          aria-label="Tu correo electrónico"
+        />
+        <button type="submit" class="btn btn--primary">Consultar</button>
+      </form>
+
+      <div id="horario-result">
+        <!-- JS renders here -->
+      </div>
+    </section>
+
+    <!-- ── TAB 3: Solicitar Clase ─────────────────────── -->
+    <section id="solicitar" class="tab-panel" role="tabpanel">
+      <h2 class="section-title">Solicitar Clase Magistral</h2>
+      <p class="section-subtitle">Elige un profesor, fecha y hora. El equipo confirmará disponibilidad.</p>
+
+      <div class="form-card">
+        <form id="form-solicitud">
+          <div class="form-grid">
+
+            <div class="form-group">
+              <label for="sol-nombre">Nombre completo</label>
+              <input id="sol-nombre" type="text" placeholder="Tu nombre" required />
+            </div>
+
+            <div class="form-group">
+              <label for="sol-email">Correo electrónico</label>
+              <input id="sol-email" type="email" placeholder="tu@correo.com" required autocomplete="email" />
+            </div>
+
+            <div class="form-group">
+              <label for="sel-profesor">Profesor solicitado</label>
+              <select id="sel-profesor" required>
+                <option value="">— Selecciona un profesor —</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="sol-fecha">Fecha preferida</label>
+              <input id="sol-fecha" type="date" required />
+            </div>
+
+            <div class="form-group">
+              <label for="sol-hora">Hora preferida</label>
+              <input id="sol-hora" type="time" required />
+            </div>
+
+            <div class="form-group full">
+              <label for="sol-mensaje">Mensaje o repertorio a trabajar</label>
+              <textarea
+                id="sol-mensaje"
+                placeholder="Obra que deseas trabajar, nivel, expectativas..."
+              ></textarea>
+            </div>
+
+          </div>
+
+          <div class="form-footer">
+            <span class="form-note">La solicitud no garantiza plaza. Recibirás confirmación por correo.</span>
+            <button type="submit" class="btn btn--primary">Enviar solicitud</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ── TAB 4: Reservar Sala ────────────────────────── -->
+    <section id="reservar" class="tab-panel" role="tabpanel">
+      <h2 class="section-title">Reservar Sala de Estudio</h2>
+      <p class="section-subtitle">Solicita un aula libre para tu práctica individual.</p>
+
+      <div class="form-card">
+        <form id="form-reserva">
+          <div class="form-grid">
+
+            <div class="form-group">
+              <label for="res-nombre">Nombre completo</label>
+              <input id="res-nombre" type="text" placeholder="Tu nombre" required />
+            </div>
+
+            <div class="form-group">
+              <label for="res-email">Correo electrónico</label>
+              <input id="res-email" type="email" placeholder="tu@correo.com" required autocomplete="email" />
+            </div>
+
+            <div class="form-group">
+              <label for="sel-sala">Sala preferida</label>
+              <select id="sel-sala" required>
+                <option value="">— Selecciona una sala —</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="res-fecha">Fecha</label>
+              <input id="res-fecha" type="date" required />
+            </div>
+
+            <div class="form-group">
+              <label for="res-hora-inicio">Hora de inicio</label>
+              <input id="res-hora-inicio" type="time" required />
+            </div>
+
+            <div class="form-group">
+              <label for="res-hora-fin">Hora de fin</label>
+              <input id="res-hora-fin" type="time" required />
+            </div>
+
+          </div>
+
+          <div class="form-footer">
+            <span class="form-note">Las reservas se gestionan por orden de llegada. Máximo 2h por sesión.</span>
+            <button type="submit" class="btn btn--primary">Confirmar reserva</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+  </div><!-- /app-wrapper -->
+
+  <!-- Scripts — orden importa -->
+  <script src="js/config.js"></script>
+  <script src="js/sheets.js"></script>
+  <script src="js/app.js"></script>
+
+  <script>
+    // Inject festival name & edition from config
+    document.getElementById("header-title").childNodes[0].textContent =
+      CONFIG.NOMBRE_FESTIVAL + " ";
+    document.getElementById("header-edition").textContent = CONFIG.EDICION;
+  </script>
+
+</body>
+</html>
