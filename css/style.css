@@ -1,43 +1,41 @@
 /* ============================================================
    FESTIVAL DE PIANO — Styles
-   Estética: Art Déco · Negro profundo · Oro
+   Estética: Teclas de piano · Marfil y negro · Elegancia clásica
    ============================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Cinzel:wght@400;600&display=swap');
 
 /* ── Tokens ─────────────────────────────────────────────── */
 :root {
-  --black:      #080808;
-  --black-2:    #111111;
-  --black-3:    #1a1a1a;
-  --black-4:    #242424;
-  --gold:       #C9A84C;
-  --gold-light: #E3C97A;
-  --gold-pale:  #F5EAC8;
-  --cream:      #F5F0E8;
-  --white:      #FAFAFA;
-  --muted:      #888880;
-  --error:      #C94C4C;
-  --success:    #4CAF50;
+  --ivory:      #F5F0E4;
+  --ivory-2:    #EDE7D8;
+  --ivory-3:    #E0D9C8;
+  --ivory-4:    #D0C9B5;
+  --black:      #0E0E0E;
+  --black-2:    #1A1A1A;
+  --black-3:    #242424;
+  --muted:      #8A8478;
+  --error:      #8B2020;
+  --success:    #2E6B3E;
 
   --font-display: 'Cinzel', serif;
   --font-heading: 'Playfair Display', Georgia, serif;
   --font-body:    'Cormorant Garamond', Georgia, serif;
 
-  --radius:  4px;
-  --radius-l: 8px;
+  --radius:  3px;
+  --radius-l: 6px;
   --transition: 220ms ease;
-  --shadow-gold: 0 0 0 1px rgba(201,168,76,0.3), 0 4px 24px rgba(201,168,76,0.08);
+  --shadow: 0 2px 16px rgba(14,14,14,0.1), 0 1px 3px rgba(14,14,14,0.06);
+  --shadow-hover: 0 4px 28px rgba(14,14,14,0.16), 0 2px 6px rgba(14,14,14,0.08);
 }
 
 /* ── Reset & Base ────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
 html { font-size: 16px; scroll-behavior: smooth; }
 
 body {
-  background: var(--black);
-  color: var(--cream);
+  background: var(--ivory);
+  color: var(--black);
   font-family: var(--font-body);
   font-size: 1.125rem;
   font-weight: 300;
@@ -46,19 +44,13 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* ── Decorative background ──────────────────────────────── */
 body::before {
   content: '';
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(201,168,76,0.04) 0%, transparent 70%),
-    repeating-linear-gradient(
-      90deg,
-      transparent,
-      transparent 79px,
-      rgba(201,168,76,0.025) 80px
-    );
+    radial-gradient(ellipse 70% 50% at 50% 0%, rgba(14,14,14,0.03) 0%, transparent 70%),
+    repeating-linear-gradient(90deg, transparent, transparent 79px, rgba(14,14,14,0.02) 80px);
   pointer-events: none;
   z-index: 0;
 }
@@ -82,7 +74,7 @@ body::before {
 .header-ornament {
   font-size: 0.65rem;
   letter-spacing: 0.35em;
-  color: var(--gold);
+  color: var(--muted);
   text-transform: uppercase;
   font-family: var(--font-display);
   display: block;
@@ -93,7 +85,7 @@ body::before {
   font-family: var(--font-display);
   font-size: clamp(1.6rem, 5vw, 2.8rem);
   font-weight: 600;
-  color: var(--white);
+  color: var(--black);
   line-height: 1.15;
   letter-spacing: 0.04em;
 }
@@ -104,7 +96,7 @@ body::before {
   font-style: italic;
   font-weight: 400;
   font-size: 0.65em;
-  color: var(--gold);
+  color: var(--muted);
   letter-spacing: 0.1em;
   margin-top: 0.2em;
 }
@@ -120,21 +112,22 @@ body::before {
   content: '';
   flex: 1;
   height: 1px;
-  background: linear-gradient(90deg, transparent, var(--gold) 60%, transparent);
-  opacity: 0.4;
+  background: linear-gradient(90deg, transparent, var(--black) 60%, transparent);
+  opacity: 0.2;
 }
 .header-diamond {
   width: 6px; height: 6px;
-  background: var(--gold);
+  background: var(--black);
   transform: rotate(45deg);
   flex-shrink: 0;
+  opacity: 0.35;
 }
 
 /* ── Tabs ────────────────────────────────────────────────── */
 .tabs {
   display: flex;
   gap: 0;
-  border-bottom: 1px solid rgba(201,168,76,0.2);
+  border-bottom: 1px solid rgba(14,14,14,0.15);
   margin-bottom: 2.5rem;
   overflow-x: auto;
   scrollbar-width: none;
@@ -157,10 +150,10 @@ body::before {
   transition: color var(--transition), border-color var(--transition);
   white-space: nowrap;
 }
-.tab-btn:hover { color: var(--gold-light); }
+.tab-btn:hover { color: var(--black-2); }
 .tab-btn.active {
-  color: var(--gold);
-  border-bottom-color: var(--gold);
+  color: var(--black);
+  border-bottom-color: var(--black);
 }
 
 /* ── Tab panels ──────────────────────────────────────────── */
@@ -177,7 +170,7 @@ body::before {
   font-family: var(--font-heading);
   font-size: 1.6rem;
   font-weight: 400;
-  color: var(--white);
+  color: var(--black);
   margin-bottom: 0.3rem;
 }
 .section-subtitle {
@@ -199,17 +192,18 @@ body::before {
   grid-template-columns: 70px 1fr auto;
   gap: 0 1.25rem;
   align-items: center;
-  background: var(--black-2);
-  border: 1px solid rgba(201,168,76,0.15);
-  border-left: 3px solid var(--gold);
+  background: #FFFFFF;
+  border: 1px solid rgba(14,14,14,0.1);
+  border-left: 3px solid var(--black);
   border-radius: var(--radius);
   padding: 1.25rem 1.5rem;
   animation: fadeUp 0.4s ease both;
   transition: border-color var(--transition), box-shadow var(--transition);
+  box-shadow: var(--shadow);
 }
 .concert-card:hover {
-  border-color: rgba(201,168,76,0.45);
-  box-shadow: var(--shadow-gold);
+  border-color: rgba(14,14,14,0.3);
+  box-shadow: var(--shadow-hover);
 }
 
 .concert-card__date {
@@ -221,7 +215,7 @@ body::before {
   font-family: var(--font-heading);
   font-size: 2rem;
   font-weight: 600;
-  color: var(--gold);
+  color: var(--black);
 }
 .concert-card__month {
   display: block;
@@ -236,8 +230,8 @@ body::before {
 .concert-card__title {
   font-family: var(--font-heading);
   font-size: 1.15rem;
-  font-weight: 400;
-  color: var(--white);
+  font-weight: 500;
+  color: var(--black);
   margin-bottom: 0.35rem;
 }
 .concert-card__meta {
@@ -258,9 +252,8 @@ body::before {
   font-size: 0.6rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  background: rgba(201,168,76,0.12);
-  color: var(--gold);
-  border: 1px solid rgba(201,168,76,0.3);
+  background: var(--black);
+  color: var(--ivory);
   border-radius: 2px;
   padding: 0.3rem 0.6rem;
   white-space: nowrap;
@@ -272,53 +265,51 @@ body::before {
   gap: 0.75rem;
   margin-bottom: 2rem;
 }
-.horario-search input {
-  flex: 1;
-}
+.horario-search input { flex: 1; }
 
 .horario-found {
   color: var(--muted);
   font-size: 0.95rem;
   margin-bottom: 1rem;
 }
-.horario-found strong { color: var(--gold); }
+.horario-found strong { color: var(--black); }
 
 .schedule-table-wrap {
   overflow-x: auto;
   border-radius: var(--radius);
+  box-shadow: var(--shadow);
 }
 .schedule-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 1rem;
+  background: #fff;
 }
-.schedule-table thead {
-  background: var(--black-3);
-}
+.schedule-table thead { background: var(--black); }
 .schedule-table th {
   font-family: var(--font-display);
   font-size: 0.6rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--gold);
+  color: var(--ivory);
   padding: 0.75rem 1rem;
   text-align: left;
-  border-bottom: 1px solid rgba(201,168,76,0.2);
 }
 .schedule-table td {
   padding: 0.85rem 1rem;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-  color: var(--cream);
+  border-bottom: 1px solid rgba(14,14,14,0.07);
+  color: var(--black);
   font-weight: 300;
 }
-.schedule-table tbody tr:hover { background: rgba(201,168,76,0.04); }
+.schedule-table tbody tr:hover { background: var(--ivory-2); }
 
 /* ── Forms ───────────────────────────────────────────────── */
 .form-card {
-  background: var(--black-2);
-  border: 1px solid rgba(201,168,76,0.15);
+  background: #FFFFFF;
+  border: 1px solid rgba(14,14,14,0.1);
   border-radius: var(--radius-l);
   padding: 2rem;
+  box-shadow: var(--shadow);
 }
 
 .form-grid {
@@ -334,14 +325,14 @@ label {
   font-size: 0.6rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--gold);
+  color: var(--black-2);
 }
 
 input, select, textarea {
-  background: var(--black-3);
-  border: 1px solid rgba(201,168,76,0.2);
+  background: var(--ivory);
+  border: 1px solid rgba(14,14,14,0.18);
   border-radius: var(--radius);
-  color: var(--cream);
+  color: var(--black);
   font-family: var(--font-body);
   font-size: 1rem;
   font-weight: 300;
@@ -352,14 +343,14 @@ input, select, textarea {
   -webkit-appearance: none;
 }
 input:focus, select:focus, textarea:focus {
-  border-color: var(--gold);
-  box-shadow: 0 0 0 3px rgba(201,168,76,0.1);
+  border-color: var(--black);
+  box-shadow: 0 0 0 3px rgba(14,14,14,0.07);
+  background: #fff;
 }
 input::placeholder, textarea::placeholder {
-  color: rgba(136,136,128,0.5);
+  color: rgba(138,132,120,0.6);
 }
-select option { background: var(--black-3); color: var(--cream); }
-
+select option { background: var(--ivory); color: var(--black); }
 textarea { resize: vertical; min-height: 90px; }
 
 /* ── Buttons ─────────────────────────────────────────────── */
@@ -376,23 +367,23 @@ textarea { resize: vertical; min-height: 90px; }
   display: inline-block;
 }
 .btn--primary {
-  background: var(--gold);
-  color: var(--black);
+  background: var(--black);
+  color: var(--ivory);
 }
 .btn--primary:hover:not(:disabled) {
-  background: var(--gold-light);
-  box-shadow: 0 4px 20px rgba(201,168,76,0.25);
+  background: var(--black-2);
+  box-shadow: 0 4px 20px rgba(14,14,14,0.2);
 }
 .btn--primary:disabled {
-  opacity: 0.55;
+  opacity: 0.45;
   cursor: not-allowed;
 }
 .btn--ghost {
   background: transparent;
-  color: var(--gold);
-  border: 1px solid rgba(201,168,76,0.4);
+  color: var(--black);
+  border: 1px solid rgba(14,14,14,0.3);
 }
-.btn--ghost:hover { border-color: var(--gold); background: rgba(201,168,76,0.06); }
+.btn--ghost:hover { border-color: var(--black); background: rgba(14,14,14,0.04); }
 
 .form-footer {
   margin-top: 1.75rem;
@@ -421,8 +412,8 @@ textarea { resize: vertical; min-height: 90px; }
 
 .loader {
   width: 28px; height: 28px;
-  border: 2px solid rgba(201,168,76,0.15);
-  border-top-color: var(--gold);
+  border: 2px solid rgba(14,14,14,0.1);
+  border-top-color: var(--black);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   display: block;
@@ -431,8 +422,8 @@ textarea { resize: vertical; min-height: 90px; }
 
 .icon-error {
   width: 36px; height: 36px;
-  background: rgba(201,76,76,0.12);
-  border: 1px solid rgba(201,76,76,0.3);
+  background: rgba(139,32,32,0.08);
+  border: 1px solid rgba(139,32,32,0.25);
   border-radius: 50%;
   color: var(--error);
   display: flex;
@@ -449,21 +440,20 @@ textarea { resize: vertical; min-height: 90px; }
   bottom: 2rem;
   right: 2rem;
   z-index: 9999;
-  background: var(--black-3);
-  border: 1px solid rgba(201,168,76,0.3);
-  color: var(--cream);
+  background: var(--black);
+  color: var(--ivory);
   font-family: var(--font-body);
   font-size: 0.95rem;
   padding: 0.9rem 1.5rem;
   border-radius: var(--radius);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  box-shadow: 0 8px 32px rgba(14,14,14,0.25);
   transform: translateY(1rem);
   opacity: 0;
   transition: all 0.35s ease;
   max-width: 320px;
 }
 .toast--visible { transform: translateY(0); opacity: 1; }
-.toast--error { border-color: rgba(201,76,76,0.4); }
+.toast--error { background: var(--error); }
 
 /* ── Responsive ──────────────────────────────────────────── */
 @media (max-width: 640px) {
