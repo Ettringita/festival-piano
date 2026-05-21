@@ -147,5 +147,3 @@ const Sheets = (() => {
     postReservaSala,
   };
 })();
-  };
-})();
