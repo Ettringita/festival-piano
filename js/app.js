@@ -302,5 +302,3 @@ document.getElementById("form-reserva").addEventListener("submit", async (e) => 
 document.addEventListener("DOMContentLoaded", () => {
   document.querySelector(".tab-btn[data-tab='conciertos']").click();
 });
-  document.querySelector(".tab-btn[data-tab='conciertos']").click();
-});
