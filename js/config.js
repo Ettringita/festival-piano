@@ -25,6 +25,6 @@ const CONFIG = {
   },
 
   // 5. Nombre del festival (aparece en la web)
-  NOMBRE_FESTIVAL: "Festival Internacional de Piano",
-  EDICION: "2025",
+  NOMBRE_FESTIVAL: "Festival Internacional de Piano de Gijón",
+  EDICION: "2026",
 };
