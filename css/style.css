@@ -466,3 +466,59 @@ textarea { resize: vertical; min-height: 90px; }
   .form-footer { flex-direction: column; align-items: flex-start; }
   .toast { right: 1rem; left: 1rem; max-width: none; }
 }
+
+/* ── Slot selector ───────────────────────────────────────── */
+.slots-label {
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--black-2);
+  margin-bottom: 0.75rem;
+  display: block;
+}
+
+.slots-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.slot-option {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+}
+
+.slot-option input[type="checkbox"] {
+  width: auto;
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--black);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.slot-option span {
+  background: var(--ivory-2);
+  border: 1px solid rgba(14,14,14,0.15);
+  border-radius: var(--radius);
+  padding: 0.4rem 0.8rem;
+  font-size: 0.95rem;
+  color: var(--black);
+  transition: all var(--transition);
+  cursor: pointer;
+  user-select: none;
+}
+
+.slot-option input:checked + span {
+  background: var(--black);
+  color: var(--ivory);
+  border-color: var(--black);
+}
+
+.slot-option:hover span {
+  border-color: var(--black);
+}
