@@ -522,3 +522,22 @@ textarea { resize: vertical; min-height: 90px; }
 .slot-option:hover span {
   border-color: var(--black);
 }
+
+/* ── Fecha buttons ───────────────────────────────────────── */
+.fecha-btn {
+  background: var(--ivory-2);
+  border: 1px solid rgba(14,14,14,0.15);
+  border-radius: var(--radius);
+  padding: 0.5rem 1rem;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: var(--black);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.fecha-btn:hover { border-color: var(--black); }
+.fecha-btn.active {
+  background: var(--black);
+  color: var(--ivory);
+  border-color: var(--black);
+}
