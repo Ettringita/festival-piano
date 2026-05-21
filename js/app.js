@@ -11,7 +11,7 @@ document.querySelectorAll(".tab-btn").forEach((btn) => {
     btn.classList.add("active");
     document.getElementById(target).classList.add("active");
     if (target === "conciertos") loadConciertos();
-    if (target === "solicitar") loadProfesores();
+    if (target === "solicitar") initSolicitud();
     if (target === "reservar") loadSalas();
   });
 });
@@ -19,30 +19,31 @@ document.querySelectorAll(".tab-btn").forEach((btn) => {
 // ── Helpers ──────────────────────────────────────────────────
 function setLoading(containerId, msg = "Cargando...") {
   document.getElementById(containerId).innerHTML = `
-    <div class="loading-state">
-      <span class="loader"></span>
-      <p>${msg}</p>
-    </div>`;
+    <div class="loading-state"><span class="loader"></span><p>${msg}</p></div>`;
 }
 
 function setError(containerId, msg) {
   document.getElementById(containerId).innerHTML = `
-    <div class="error-state">
-      <span class="icon-error">!</span>
-      <p>${msg}</p>
-    </div>`;
+    <div class="error-state"><span class="icon-error">!</span><p>${msg}</p></div>`;
 }
 
 function formatDate(str) {
   if (!str) return "—";
-  const d = new Date(str);
+  // soporta dd/mm/yyyy y yyyy-mm-dd
+  let d;
+  if (str.includes("/")) {
+    const [dd, mm, yyyy] = str.split("/");
+    d = new Date(`${yyyy}-${mm}-${dd}`);
+  } else {
+    d = new Date(str);
+  }
   if (isNaN(d)) return str;
   return d.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 }
 
 function formatTime(str) {
   if (!str) return "—";
-  return str.length === 5 ? str : str.slice(0, 5);
+  return str.slice(0, 5);
 }
 
 function showToast(msg, type = "success") {
@@ -84,7 +85,7 @@ async function loadConciertos() {
     ).join("");
   } catch (e) {
     console.error(e);
-    setError("conciertos-list", "No se pudo cargar el calendario. Verifica la configuración de Google Sheets.");
+    setError("conciertos-list", "No se pudo cargar el calendario.");
   }
 }
 
@@ -92,7 +93,7 @@ function monthFromDate(str) {
   if (!str) return "";
   const months = ["ENE","FEB","MAR","ABR","MAY","JUN","JUL","AGO","SEP","OCT","NOV","DIC"];
   const parts = str.includes("/") ? str.split("/") : str.split("-");
-  const m = parseInt(parts[1] || parts[0]) - 1;
+  const m = parseInt(str.includes("/") ? parts[1] : parts[1]) - 1;
   return months[m] || "";
 }
 
@@ -106,43 +107,42 @@ document.getElementById("horario-form").addEventListener("submit", async (e) => 
     const clases = await Sheets.getHorarioAlumno(email);
     if (!clases.length) {
       document.getElementById("horario-result").innerHTML =
-        `<p class="empty-state">No se encontraron clases para <strong>${email}</strong>.<br>Verifica que el correo coincida con el registro.</p>`;
+        `<p class="empty-state">No hay clases aceptadas para <strong>${email}</strong> aún.</p>`;
       return;
     }
     document.getElementById("horario-result").innerHTML = `
-      <p class="horario-found">Se encontraron <strong>${clases.length}</strong> clase${clases.length > 1 ? "s" : ""}</p>
+      <p class="horario-found">Se encontraron <strong>${clases.length}</strong> clase${clases.length > 1 ? "s" : ""} confirmada${clases.length > 1 ? "s" : ""}</p>
       <div class="schedule-table-wrap">
         <table class="schedule-table">
           <thead>
-            <tr>
-              <th>Fecha</th><th>Hora</th><th>Sala / Aula</th><th>Profesor</th><th>Observaciones</th>
-            </tr>
+            <tr><th>Fecha</th><th>Hora</th><th>Profesor</th><th>Sala</th></tr>
           </thead>
           <tbody>
             ${clases.map((c) => `
               <tr>
                 <td>${formatDate(c.fecha)}</td>
-                <td>${formatTime(c.hora)}</td>
-                <td>${c.sala || c.aula || "—"}</td>
+                <td>${formatTime(c.hora_1 || c.hora || "—")}</td>
                 <td>${c.profesor || "—"}</td>
-                <td>${c.observaciones || c.notas || "—"}</td>
+                <td>${c.sala || c.aula || "—"}</td>
               </tr>`).join("")}
           </tbody>
         </table>
       </div>`;
   } catch (e) {
     console.error(e);
-    setError("horario-result", "Error al consultar el horario. Inténtalo de nuevo.");
+    setError("horario-result", "Error al consultar. Inténtalo de nuevo.");
   }
 });
 
 // ── TAB 3: Solicitar Clase ───────────────────────────────────
-async function loadProfesores() {
+let profesoresCache = [];
+
+async function initSolicitud() {
   const sel = document.getElementById("sel-profesor");
-  if (sel.options.length > 1) return; // ya cargado
+  if (sel.options.length > 1) return;
   try {
-    const profesores = await Sheets.getProfesores();
-    profesores.forEach((p) => {
+    profesoresCache = await Sheets.getProfesores();
+    profesoresCache.forEach((p) => {
       if (!p) return;
       const opt = document.createElement("option");
       opt.value = opt.textContent = p;
@@ -153,24 +153,101 @@ async function loadProfesores() {
   }
 }
 
+// Cuando cambia profesor o fecha, carga los slots disponibles
+async function actualizarSlots() {
+  const profesor = document.getElementById("sel-profesor").value;
+  const fecha = document.getElementById("sol-fecha").value;
+  if (!profesor || !fecha) return;
+
+  const slotsWrap = document.getElementById("slots-wrap");
+  slotsWrap.innerHTML = `<div class="loading-state" style="padding:1rem 0"><span class="loader"></span></div>`;
+
+  try {
+    const slots = await Sheets.getSlotsDisponibles(profesor, fecha);
+    renderSlots(slots);
+  } catch (e) {
+    slotsWrap.innerHTML = `<p class="form-note" style="color:var(--error)">Error al cargar disponibilidad.</p>`;
+  }
+}
+
+function renderSlots(slots) {
+  const slotsWrap = document.getElementById("slots-wrap");
+  if (!slots.length) {
+    slotsWrap.innerHTML = `<p class="form-note">No hay horas disponibles para esa fecha.</p>`;
+    return;
+  }
+
+  const todasOpciones = [...slots, "me_adapto"];
+
+  slotsWrap.innerHTML = `
+    <p class="slots-label">Selecciona hasta 3 preferencias de horario (por orden de prioridad):</p>
+    <div class="slots-grid">
+      ${todasOpciones.map((s) => `
+        <label class="slot-option">
+          <input type="checkbox" name="slot" value="${s}" />
+          <span>${s === "me_adapto" ? "Me adapto al profesor" : s}</span>
+        </label>`).join("")}
+    </div>
+    <p id="slots-error" class="form-note" style="color:var(--error);display:none">Máximo 3 preferencias.</p>
+  `;
+
+  // Máximo 3 checkboxes
+  slotsWrap.querySelectorAll('input[name="slot"]').forEach((cb) => {
+    cb.addEventListener("change", () => {
+      const checked = [...slotsWrap.querySelectorAll('input[name="slot"]:checked')];
+      const err = document.getElementById("slots-error");
+      if (checked.length > 3) {
+        cb.checked = false;
+        err.style.display = "block";
+      } else {
+        err.style.display = "none";
+      }
+    });
+  });
+}
+
+document.getElementById("sel-profesor").addEventListener("change", actualizarSlots);
+document.getElementById("sol-fecha").addEventListener("change", actualizarSlots);
+
 document.getElementById("form-solicitud").addEventListener("submit", async (e) => {
   e.preventDefault();
   const btn = e.target.querySelector("button[type=submit]");
+
+  const nombre   = document.getElementById("sol-nombre").value.trim();
+  const email    = document.getElementById("sol-email").value.trim();
+  const profesor = document.getElementById("sel-profesor").value;
+  const fecha    = document.getElementById("sol-fecha").value;
+  const mensaje  = document.getElementById("sol-mensaje").value.trim();
+
+  // Recoger preferencias seleccionadas
+  const checked = [...document.querySelectorAll('input[name="slot"]:checked')];
+  if (!checked.length) {
+    showToast("Selecciona al menos una preferencia de horario.", "error");
+    return;
+  }
+
+  const horas = checked.map((c) => c.value === "me_adapto" ? "Me adapto" : c.value);
+  const [hora_1 = "", hora_2 = "", hora_3 = ""] = horas;
+
   btn.disabled = true;
   btn.textContent = "Enviando...";
-  const datos = {
-    nombre: document.getElementById("sol-nombre").value.trim(),
-    email: document.getElementById("sol-email").value.trim(),
-    profesor: document.getElementById("sel-profesor").value,
-    fecha: document.getElementById("sol-fecha").value,
-    hora: document.getElementById("sol-hora").value,
-    mensaje: document.getElementById("sol-mensaje").value.trim(),
-    timestamp: new Date().toISOString(),
-  };
+
   try {
-    await Sheets.postSolicitudClase(datos);
+    // Validar en cliente
+    const validacion = await Sheets.validarSolicitud(email, profesor, fecha, horas);
+    if (!validacion.ok) {
+      showToast(validacion.msg, "error");
+      return;
+    }
+
+    await Sheets.postSolicitudClase({
+      nombre, email, profesor, fecha, hora_1, hora_2, hora_3,
+      mensaje, estado: "pendiente", timestamp: new Date().toISOString(),
+    });
+
     showToast("✓ Solicitud enviada correctamente");
     e.target.reset();
+    document.getElementById("slots-wrap").innerHTML = "";
   } catch (err) {
     console.error(err);
     showToast("Error al enviar. Inténtalo de nuevo.", "error");
@@ -187,14 +264,11 @@ async function loadSalas() {
   try {
     const salas = await Sheets.getSalas();
     salas.forEach((s) => {
-      if (!s) return;
       const opt = document.createElement("option");
       opt.value = opt.textContent = s;
       sel.appendChild(opt);
     });
-  } catch (e) {
-    console.error("No se pudieron cargar las salas", e);
-  }
+  } catch (e) { console.error(e); }
 }
 
 document.getElementById("form-reserva").addEventListener("submit", async (e) => {
@@ -226,5 +300,7 @@ document.getElementById("form-reserva").addEventListener("submit", async (e) => 
 
 // ── Init ──────────────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
+  document.querySelector(".tab-btn[data-tab='conciertos']").click();
+});
   document.querySelector(".tab-btn[data-tab='conciertos']").click();
 });
