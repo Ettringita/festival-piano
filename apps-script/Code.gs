@@ -19,9 +19,11 @@ function doPost(e) {
 
     if (data.action === "solicitud_clase") {
       const sheet = ss.getSheetByName(SHEET_NAMES.solicitudes);
-      // Si la hoja no tiene cabeceras, las añade
       if (sheet.getLastRow() === 0) {
-        sheet.appendRow(["Timestamp", "Nombre", "Email", "Profesor", "Fecha", "Hora", "Mensaje"]);
+        sheet.appendRow([
+          "timestamp","nombre","email","profesor",
+          "fecha","hora_1","hora_2","hora_3","mensaje","estado"
+        ]);
       }
       sheet.appendRow([
         data.timestamp,
@@ -29,15 +31,18 @@ function doPost(e) {
         data.email,
         data.profesor,
         data.fecha,
-        data.hora,
+        data.hora_1 || "",
+        data.hora_2 || "",
+        data.hora_3 || "",
         data.mensaje || "",
+        "pendiente",  // estado inicial
       ]);
     }
 
     if (data.action === "reserva_sala") {
       const sheet = ss.getSheetByName(SHEET_NAMES.reservas);
       if (sheet.getLastRow() === 0) {
-        sheet.appendRow(["Timestamp", "Nombre", "Email", "Sala", "Fecha", "Hora inicio", "Hora fin"]);
+        sheet.appendRow(["timestamp","nombre","email","sala","fecha","hora_inicio","hora_fin"]);
       }
       sheet.appendRow([
         data.timestamp,
@@ -63,7 +68,6 @@ function doPost(e) {
   }
 }
 
-// Permite testear el endpoint con GET
 function doGet() {
   return ContentService
     .createTextOutput(JSON.stringify({ status: "Festival Piano API activa" }))
