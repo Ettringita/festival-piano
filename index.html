@@ -94,13 +94,14 @@
               </select>
             </div>
 
-            <div class="form-group">
-              <label for="sol-fecha">Fecha</label>
-              <input id="sol-fecha" type="date" required />
+            <div class="form-group full" id="fechas-wrap">
+              <!-- Las fechas disponibles se cargan aquí al elegir profesor -->
             </div>
 
+            <input type="hidden" id="sol-fecha-hidden" />
+
             <div class="form-group full" id="slots-wrap">
-              <!-- Los horarios disponibles se cargan aquí al elegir profesor y fecha -->
+              <!-- Los horarios disponibles se cargan aquí al elegir fecha -->
             </div>
 
             <div class="form-group full">
@@ -188,4 +189,3 @@
 
 </body>
 </html>
-
