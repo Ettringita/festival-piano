@@ -123,6 +123,96 @@ body::before {
   opacity: 0.35;
 }
 
+/* ── Identity Banner ─────────────────────────────────────── */
+.identity-banner {
+  margin: 1.5rem 0 2rem;
+  border: 1px solid rgba(14,14,14,0.12);
+  border-radius: var(--radius-l);
+  background: #fff;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.identity-form {
+  padding: 1.25rem 1.5rem;
+}
+
+.identity-prompt {
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.85rem;
+}
+
+.identity-inputs {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.identity-inputs input {
+  flex: 1;
+  min-width: 180px;
+}
+
+.identity-saved {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.9rem 1.5rem;
+  background: var(--black);
+  color: var(--ivory);
+  flex-wrap: wrap;
+}
+
+.identity-name {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 300;
+  color: var(--ivory);
+}
+
+.identity-name strong {
+  font-weight: 500;
+}
+
+.identity-email {
+  font-size: 0.9rem;
+  color: rgba(245,240,228,0.6);
+  flex: 1;
+}
+
+/* Botón pequeño para "Cambiar" en la identity bar */
+.btn--sm {
+  padding: 0.45rem 1rem;
+  font-size: 0.6rem;
+}
+
+.btn--ghost.btn--sm {
+  border-color: rgba(245,240,228,0.3);
+  color: var(--ivory);
+}
+.btn--ghost.btn--sm:hover {
+  border-color: var(--ivory);
+  background: rgba(245,240,228,0.08);
+}
+
+/* ── Inputs readonly (pre-rellenados por identidad) ─────── */
+input[readonly] {
+  background: var(--ivory-3);
+  color: var(--muted);
+  cursor: default;
+  border-color: rgba(14,14,14,0.08);
+}
+input[readonly]:focus {
+  border-color: rgba(14,14,14,0.12);
+  box-shadow: none;
+  background: var(--ivory-3);
+}
+
 /* ── Tabs ────────────────────────────────────────────────── */
 .tabs {
   display: flex;
@@ -455,19 +545,7 @@ textarea { resize: vertical; min-height: 90px; }
 .toast--visible { transform: translateY(0); opacity: 1; }
 .toast--error { background: var(--error); }
 
-/* ── Responsive ──────────────────────────────────────────── */
-@media (max-width: 640px) {
-  .site-header { padding: 2.5rem 0.5rem 2rem; }
-  .concert-card { grid-template-columns: 55px 1fr; }
-  .concert-card__badge { display: none; }
-  .form-grid { grid-template-columns: 1fr; }
-  .form-group.full { grid-column: 1; }
-  .horario-search { flex-direction: column; }
-  .form-footer { flex-direction: column; align-items: flex-start; }
-  .toast { right: 1rem; left: 1rem; max-width: none; }
-}
-
-/* ── Slot selector ───────────────────────────────────────── */
+/* ── Slot selector (checkboxes y radios) ─────────────────── */
 .slots-label {
   font-family: var(--font-display);
   font-size: 0.6rem;
@@ -492,8 +570,8 @@ textarea { resize: vertical; min-height: 90px; }
   cursor: pointer;
 }
 
-.slot-option input[type="checkbox"] {
-  width: auto;
+.slot-option input[type="checkbox"],
+.slot-option input[type="radio"] {
   width: 1rem;
   height: 1rem;
   accent-color: var(--black);
@@ -540,4 +618,19 @@ textarea { resize: vertical; min-height: 90px; }
   background: var(--black);
   color: var(--ivory);
   border-color: var(--black);
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .site-header { padding: 2.5rem 0.5rem 2rem; }
+  .concert-card { grid-template-columns: 55px 1fr; }
+  .concert-card__badge { display: none; }
+  .form-grid { grid-template-columns: 1fr; }
+  .form-group.full { grid-column: 1; }
+  .horario-search { flex-direction: column; }
+  .form-footer { flex-direction: column; align-items: flex-start; }
+  .toast { right: 1rem; left: 1rem; max-width: none; }
+  .identity-inputs { flex-direction: column; }
+  .identity-inputs input { min-width: 0; width: 100%; }
+  .identity-saved { gap: 0.5rem; }
 }
