@@ -5,7 +5,6 @@
 
 const CONFIG = {
   // 1. ID de tu Google Sheet (está en la URL del spreadsheet)
-  //    https://docs.google.com/spreadsheets/d/AQUÍ_VA_EL_ID/edit
   SHEET_ID: "1trHHCmlRkLBMZDMWP-ix5A4xXk_zF9fQtxjK1KQ56Zg",
 
   // 2. API Key de Google Cloud Console (solo lectura)
@@ -16,15 +15,23 @@ const CONFIG = {
 
   // 4. Nombre exacto de las pestañas en tu Google Sheet
   TABS: {
-    conciertos: "Conciertos",
-    horarios: "Horarios",
-    profesores: "Profesores",
-    salas: "Salas",
+    conciertos:  "Conciertos",
+    horarios:    "Horarios",
+    profesores:  "Profesores",
+    salas:       "Salas",
     solicitudes: "Solicitudes",
-    reservas: "Reservas",
+    reservas:    "Reservas",
   },
 
   // 5. Nombre del festival (aparece en la web)
-  NOMBRE_FESTIVAL: "Festival Internacional de Piano de Gijón",
-  EDICION: "2026",
+  NOMBRE_FESTIVAL: "Festival Internacional de Piano",
+  EDICION: "2025",
+
+  // 6. Horas en las que los pianos de cola están disponibles en principio.
+  //    Las horas en que los profesores tienen clase se descuentan automáticamente.
+  //    Formato HH:MM (24h). Ajusta según el horario real del festival.
+  HORAS_DISPONIBLES: [
+    "09:00", "10:00", "11:00", "12:00", "13:00",
+    "16:00", "17:00", "18:00", "19:00", "20:00",
+  ],
 };
