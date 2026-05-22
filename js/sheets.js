@@ -1,48 +1,52 @@
 // ============================================================
-//  FESTIVAL DE PIANO — Google Sheets API Layer
+//  FESTIVAL DE PIANO — Sheets (capa de solo lectura)
+//  Escribe siempre a través de api.js, nunca aquí.
 // ============================================================
 
 const Sheets = (() => {
   const BASE = "https://sheets.googleapis.com/v4/spreadsheets";
 
-  // ── Core ────────────────────────────────────────────────────
+  // ── Caché por sesión ─────────────────────────────────────────
+  // Evita llamadas duplicadas a la API durante la misma visita.
+  // Se invalida después de cualquier escritura (ver api.js).
+  const _cache = {};
+
   async function read(tabName) {
+    if (_cache[tabName]) return _cache[tabName];
     const url = `${BASE}/${CONFIG.SHEET_ID}/values/${encodeURIComponent(tabName)}?key=${CONFIG.API_KEY}`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`Sheets API error: ${res.status}`);
+    const res  = await fetch(url);
+    if (!res.ok) throw new Error(`Sheets API error ${res.status} — ${tabName}`);
     const data = await res.json();
-    return data.values || [];
+    _cache[tabName] = data.values || [];
+    return _cache[tabName];
+  }
+
+  function invalidateCache(...tabs) {
+    if (!tabs.length) {
+      Object.keys(_cache).forEach(k => delete _cache[k]);
+    } else {
+      tabs.forEach(t => delete _cache[t]);
+    }
   }
 
   function toObjects(rows) {
     if (!rows || rows.length < 2) return [];
-    const headers = rows[0].map((h) =>
-      h.trim().toLowerCase()
-       .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-       .replace(/ /g, "_")
+    const headers = rows[0].map(h =>
+      String(h).trim().toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/\s+/g, "_")
     );
-    return rows.slice(1).map((row) => {
+    return rows.slice(1).map(row => {
       const obj = {};
-      headers.forEach((h, i) => (obj[h] = (row[i] || "").trim()));
+      headers.forEach((h, i) => (obj[h] = String(row[i] ?? "").trim()));
       return obj;
     });
   }
 
-  async function write(action, payload) {
-    const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain" },
-      body: JSON.stringify({ action, ...payload }),
-    });
-    if (!res.ok) throw new Error(`Apps Script error: ${res.status}`);
-    return await res.json();
-  }
-
-  // ── Normalización de fechas ──────────────────────────────────
-  // Convierte cualquier formato (DD/MM/YYYY o YYYY-MM-DD) a DD/MM/YYYY
+  // Normaliza cualquier formato de fecha a DD/MM/YYYY
   function normalizeFecha(str) {
     if (!str) return "";
-    str = str.trim();
+    str = String(str).trim();
     if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
       const [y, m, d] = str.split("-");
       return `${d}/${m}/${y}`;
@@ -56,180 +60,146 @@ const Sheets = (() => {
     return toObjects(rows);
   }
 
-  // ── Horario alumno ───────────────────────────────────────────
-  // Lee de Solicitudes las filas con estado "aceptada" para ese email
-  async function getHorarioAlumno(email) {
-    const rows = await read(CONFIG.TABS.solicitudes);
-    const todas = toObjects(rows);
-    return todas.filter(
-      (r) =>
-        r.email.toLowerCase() === email.toLowerCase() &&
-        r.estado && r.estado.toLowerCase() === "aceptada"
-    );
-  }
-
   // ── Profesores ───────────────────────────────────────────────
-  async function getProfesoresData() {
+  async function _getProfesoresData() {
     const rows = await read(CONFIG.TABS.profesores);
     return toObjects(rows);
-    // Columnas esperadas en el Sheet:
-    //   nombre | fecha | hora | exclusivo
-    // "exclusivo" = "sí" (o "si") si el profesor solo puede dar 1 clase por alumno en todo el festival
+    // Columnas: nombre | token | fecha | hora | exclusivo
   }
 
+  // Lista de nombres únicos (para el select del alumno)
   async function getProfesores() {
-    const data = await getProfesoresData();
-    return [...new Set(data.map((p) => p.nombre).filter(Boolean))];
+    const data = await _getProfesoresData();
+    return [...new Set(data.map(p => p.nombre).filter(Boolean))];
   }
 
-  // Fechas disponibles de un profesor (deduplica y ordena)
-  async function getFechasDisponibles(profesor) {
-    const data = await getProfesoresData();
-    const fechas = [
-      ...new Set(
-        data
-          .filter((p) => p.nombre === profesor && p.fecha)
-          .map((p) => p.fecha)
-      ),
-    ].sort();
-    return fechas;
-  }
-
-  // Slots de un profesor en una fecha, descontando los ya solicitados/aceptados
-  async function getSlotsDisponibles(profesor, fecha) {
-    const fechaNorm = normalizeFecha(fecha);
-    const [profData, solRows] = await Promise.all([
-      getProfesoresData(),
-      read(CONFIG.TABS.solicitudes),
+  // Disponibilidad real de un profesor: slots ofertados − slots aceptados
+  // Devuelve: [{ fecha, slotsLibres: ["10:00", "11:00"] }, ...]
+  async function getDisponibilidadProfesor(profesor) {
+    const [profData, solData] = await Promise.all([
+      _getProfesoresData(),
+      _getSolicitudesData(),
     ]);
 
-    const ofertadas = profData
-      .filter(
-        (p) => p.nombre === profesor && normalizeFecha(p.fecha) === fechaNorm
+    // Todos los slots que oferta este profesor, agrupados por fecha
+    const ofertaPorFecha = {};
+    profData
+      .filter(p => p.nombre === profesor && p.fecha && p.hora)
+      .forEach(p => {
+        const f = normalizeFecha(p.fecha);
+        if (!ofertaPorFecha[f]) ofertaPorFecha[f] = [];
+        ofertaPorFecha[f].push(p.hora.trim().slice(0, 5));
+      });
+
+    // Slots ya bloqueados (solicitudes aceptadas de este profesor)
+    const bloqueados = {}; // { "DD/MM/YYYY": Set<"HH:MM"> }
+    solData
+      .filter(s =>
+        s.profesor === profesor &&
+        s.estado   === "aceptada" &&
+        s.fecha_asignada &&
+        s.hora_asignada
       )
-      .map((p) => p.hora.trim().slice(0, 5));
+      .forEach(s => {
+        const f = normalizeFecha(s.fecha_asignada);
+        if (!bloqueados[f]) bloqueados[f] = new Set();
+        bloqueados[f].add(s.hora_asignada.trim().slice(0, 5));
+      });
 
-    const solicitudes = toObjects(solRows);
-    const ocupadas = new Set();
-    solicitudes.forEach((s) => {
-      if (
-        s.profesor === profesor &&
-        normalizeFecha(s.fecha) === fechaNorm &&
-        (s.estado === "pendiente" || s.estado === "aceptada")
-      ) {
-        [s.hora_1, s.hora_2, s.hora_3].forEach((h) => {
-          if (h && h !== "Me adapto") ocupadas.add(h.trim().slice(0, 5));
-        });
-      }
-    });
-
-    return ofertadas.filter((h) => !ocupadas.has(h));
+    // Cruzar: solo fechas con al menos un slot libre
+    return Object.entries(ofertaPorFecha)
+      .map(([fecha, slots]) => ({
+        fecha,
+        slotsLibres: slots.filter(h => !bloqueados[fecha]?.has(h)),
+      }))
+      .filter(d => d.slotsLibres.length > 0)
+      .sort((a, b) => {
+        // Ordenar por fecha ascendente (DD/MM/YYYY → ISO para comparar)
+        const toISO = f => f.split("/").reverse().join("-");
+        return toISO(a.fecha) < toISO(b.fecha) ? -1 : 1;
+      });
   }
 
-  // ── Validaciones para solicitud de clase ─────────────────────
-  async function validarSolicitud(email, profesor, fecha) {
-    const fechaNorm = normalizeFecha(fecha);
-    const [solRows, profData] = await Promise.all([
-      read(CONFIG.TABS.solicitudes),
-      getProfesoresData(),
+  // ¿Este profesor está bloqueado para este alumno?
+  // Bloqueado = exclusivo Y ya tiene solicitud pendiente/aceptada con él
+  async function isProfesorBloqueadoParaAlumno(email, profesor) {
+    const [profData, solData] = await Promise.all([
+      _getProfesoresData(),
+      _getSolicitudesData(),
     ]);
-    const solicitudes = toObjects(solRows);
-    const emailLow = email.toLowerCase();
 
-    // 1. ¿Ya tiene clase aceptada ese día?
-    const claseAceptadaEseDia = solicitudes.some(
-      (s) =>
-        s.email.toLowerCase() === emailLow &&
-        normalizeFecha(s.fecha) === fechaNorm &&
-        s.estado === "aceptada"
+    const esExclusivo = profData.some(p =>
+      p.nombre === profesor &&
+      p.exclusivo.toLowerCase().startsWith("s")
     );
-    if (claseAceptadaEseDia) {
-      return { ok: false, msg: "Ya tienes una clase aceptada ese día." };
-    }
+    if (!esExclusivo) return false;
 
-    // 2. ¿Ya tiene solicitud pendiente/aceptada con ese profesor ese día?
-    const yaHaySolicitud = solicitudes.some(
-      (s) =>
-        s.email.toLowerCase() === emailLow &&
-        normalizeFecha(s.fecha) === fechaNorm &&
-        s.profesor === profesor &&
-        (s.estado === "pendiente" || s.estado === "aceptada")
+    return solData.some(s =>
+      s.email.toLowerCase() === email.toLowerCase() &&
+      s.profesor            === profesor &&
+      (s.estado === "pendiente" || s.estado === "aceptada")
     );
-    if (yaHaySolicitud) {
-      return {
-        ok: false,
-        msg: "Ya tienes una solicitud con ese profesor ese día.",
-      };
-    }
-
-    // 3. Profesor exclusivo: solo 1 clase por alumno en todo el festival
-    const profInfo = profData.find((p) => p.nombre === profesor);
-    const esExclusivo =
-      profInfo &&
-      (profInfo.exclusivo || "").toLowerCase().startsWith("s");
-
-    if (esExclusivo) {
-      const yaClaseConProfesor = solicitudes.some(
-        (s) =>
-          s.email.toLowerCase() === emailLow &&
-          s.profesor === profesor &&
-          (s.estado === "pendiente" || s.estado === "aceptada")
-      );
-      if (yaClaseConProfesor) {
-        return {
-          ok: false,
-          msg: `${profesor} solo puede darte una clase en el festival y ya tienes una solicitud con este profesor.`,
-        };
-      }
-    }
-
-    return { ok: true };
   }
 
-  // ── Salas / Pianos de cola ───────────────────────────────────
+  // ── Solicitudes ──────────────────────────────────────────────
+  async function _getSolicitudesData() {
+    const rows = await read(CONFIG.TABS.solicitudes);
+    return toObjects(rows);
+  }
+
+  // Clases confirmadas del alumno (para Mi Horario)
+  async function getHorarioAlumno(email) {
+    const data = await _getSolicitudesData();
+    return data.filter(s =>
+      s.email.toLowerCase() === email.toLowerCase() &&
+      s.estado === "aceptada"
+    );
+  }
+
+  // Todas las solicitudes del alumno (para validaciones UX)
+  async function getSolicitudesAlumno(email) {
+    const data = await _getSolicitudesData();
+    return data.filter(s =>
+      s.email.toLowerCase() === email.toLowerCase()
+    );
+  }
+
+  // ── Salas / Piano de cola ────────────────────────────────────
   async function getSalas() {
     try {
       const rows = await read(CONFIG.TABS.salas);
       return toObjects(rows)
-        .map((s) => s.sala || s.nombre || s.name || "")
+        .map(s => s.sala || s.nombre || "")
         .filter(Boolean);
     } catch {
       return [];
     }
   }
 
-  // Horas libres para piano de cola en una fecha:
-  // CONFIG.HORAS_DISPONIBLES − horas que tienen los profesores ese día
+  // Horas libres para piano: CONFIG.HORAS_DISPONIBLES − horas de profesores ese día
   async function getSlotsLibresParaPiano(fecha) {
     const fechaNorm = normalizeFecha(fecha);
-    const profData = await getProfesoresData();
+    const profData  = await _getProfesoresData();
+
     const horasOcupadas = new Set(
       profData
-        .filter((p) => normalizeFecha(p.fecha) === fechaNorm && p.hora)
-        .map((p) => p.hora.trim().slice(0, 5))
+        .filter(p => normalizeFecha(p.fecha) === fechaNorm && p.hora)
+        .map(p => p.hora.trim().slice(0, 5))
     );
-    return CONFIG.HORAS_DISPONIBLES.filter((h) => !horasOcupadas.has(h));
+
+    return CONFIG.HORAS_DISPONIBLES.filter(h => !horasOcupadas.has(h));
   }
 
-  // ── Escritura ────────────────────────────────────────────────
-  async function postSolicitudClase(datos) {
-    return write("solicitud_clase", datos);
-  }
-
-  async function postReservaPiano(datos) {
-    return write("reserva_piano", datos);
-  }
-
+  // ── API pública del módulo ────────────────────────────────────
   return {
     getConciertos,
-    getHorarioAlumno,
     getProfesores,
-    getFechasDisponibles,
-    getSlotsDisponibles,
-    validarSolicitud,
+    getDisponibilidadProfesor,
+    isProfesorBloqueadoParaAlumno,
+    getHorarioAlumno,
+    getSolicitudesAlumno,
     getSalas,
     getSlotsLibresParaPiano,
-    postSolicitudClase,
-    postReservaPiano,
+    invalidateCache,
   };
 })();
